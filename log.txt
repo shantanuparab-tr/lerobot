@@ -1,0 +1,84 @@
+Episode Dict Keys: dict_keys(['action', 'observation.state', 'timestamp', 'frame_index', 'episode_index', 'index', 'task_index'])
+Key: action, Type: <class 'numpy.ndarray'>, Example Value: [[   3.1640625  198.7207     198.7207     183.51562    183.60352
+     5.0976562  -99.31641     -3.1640625    5.442177    -2.5488281
+   200.30273    200.21484    181.40625    181.49414     -3.2519531
+  -100.37109      2.7246094    2.8764806]
+ [   3.1640625  198.7207     198.63281    183.51562    183.60352
+     5.0976562  -99.31641     -3.1640625    5.442177    -2.6367188
+   200.30273    200.21484    181.40625    181.49414     -3.2519531
+  -100.37109      2.9003906    2.8764806]]
+Key: observation.state, Type: <class 'numpy.ndarray'>, Example Value: [[   3.6914062  196.69922    197.05078    182.8125     182.63672
+     4.921875   -99.31641     -2.7246094    4.9612403   -2.4609375
+   197.05078    197.05078    182.46094    182.37305     -2.9003906
+  -100.458984     2.1972656    1.8927444]
+ [   3.6914062  196.69922    197.05078    182.8125     182.72461
+     4.921875   -99.31641     -2.7246094    4.9612403   -2.4609375
+   197.05078    197.05078    182.37305    182.37305     -2.7246094
+  -100.458984     2.1972656    1.8927444]]
+Key: timestamp, Type: <class 'numpy.ndarray'>, Example Value: [0.         0.03333334]
+Key: frame_index, Type: <class 'numpy.ndarray'>, Example Value: [0 1]
+Key: episode_index, Type: <class 'numpy.ndarray'>, Example Value: [0 0]
+Key: index, Type: <class 'numpy.ndarray'>, Example Value: [0 1]
+Key: task_index, Type: <class 'numpy.ndarray'>, Example Value: [0 0]
+
+Sending goal tensor([  3.1641, 198.7207, 198.6328, 183.5156, 183.6035,   5.0977, -99.3164,
+         -3.1641,   5.4422]) to left follower arm.
+Goal position: [  3 198 198 183 183   5 -99  -3   5]
+
+
+Type of leader_pos: <class 'numpy.ndarray'>
+
+Follower Element: <class 'numpy.float32'>
+Follower: <class 'numpy.ndarray'>
+
+
+
+###############################################################################################################################
+
+Follower Element: <class 'numpy.float32'>
+Follower: <class 'numpy.ndarray'>
+
+
+Sending goal tensor([-1.0928e-02,  1.4939e+01,  1.4852e+01,  1.6393e-01, -3.2785e-02,
+         3.2785e-02,  6.2609e+01], dtype=torch.float64) to left follower arm.
+Goal position: [ 0 14 14  0  0  0 62]
+
+Type of leader_pos: <class 'list'>
+
+
+
+
+Episode Dict Keys: dict_keys(['action', 'observation.state', 'timestamp', 'frame_index', 'episode_index', 'index', 'task_index'])
+Key: action, Type: <class 'numpy.ndarray'>, Example Value: [[4095. 4435. 4433. 4097. 4095. 4094. 5549. 4096. 4434. 4434. 4086. 4091.
+  4096. 4525.]
+ [4095. 4435. 4433. 4097. 4095. 4092. 5551. 4096. 4434. 4434. 4086. 4091.
+  4096. 4525.]]
+Key: observation.state, Type: <class 'numpy.ndarray'>, Example Value: [[4095. 4435. 4433. 4095. 4096. 4095. 5553. 4096. 4434. 4433. 4085. 4090.
+  4094. 4521.]
+ [4095. 4435. 4433. 4095. 4096. 4092. 5551. 4096. 4434. 4433. 4085. 4090.
+  4094. 4521.]]
+Key: timestamp, Type: <class 'numpy.ndarray'>, Example Value: [0.         0.03333334]
+Key: frame_index, Type: <class 'numpy.ndarray'>, Example Value: [0 1]
+Key: episode_index, Type: <class 'numpy.ndarray'>, Example Value: [0 0]
+Key: index, Type: <class 'numpy.ndarray'>, Example Value: [0 1]
+Key: task_index, Type: <class 'numpy.ndarray'>, Example Value: [0 0]
+
+
+hf_features: {'action': Sequence(feature=Value(dtype='float32', id=None), length=2, id=None), 'observation.state': Sequence(feature=Value(dtype='float32', id=None), length=2, id=None), 'timestamp': Value(dtype='float32', id=None), 'frame_index': Value(dtype='int64', id=None), 'episode_index': Value(dtype='int64', id=None), 'index': Value(dtype='int64', id=None), 'task_index': Value(dtype='int64', id=None)}
+
+
+['left_waist', 'left_shoulder', 'left_shoulder_shadow', 'left_elbow', 'left_elbow_shadow', 'left_forearm_roll', 'left_wrist_angle', 'left_wrist_rotate', 'left_gripper', 'right_waist', 'right_shoulder', 'right_shoulder_shadow', 'right_elbow', 'right_elbow_shadow', 'right_forearm_roll', 'right_wrist_angle', 'right_wrist_rotate', 'right_gripper']
+['left_waist', 'left_shoulder', 'left_shoulder_shadow', 'left_elbow', 'left_elbow_shadow', 'left_forearm_roll', 'left_wrist_angle', 'left_wrist_rotate', 'left_gripper', 'right_waist', 'right_shoulder', 'right_shoulder_shadow', 'right_elbow', 'right_elbow_shadow', 'right_forearm_roll', 'right_wrist_angle', 'right_wrist_rotate', 'right_gripper']
+
+
+["left_{'waist': [1, 'damaeo'], 'shoulder': [2, 'damaeo'], 'elbow': [3, 'damaeo'], 'forearm_roll': [4, 'damaeo'], 'wrist_angle': [5, 'damaeo'], 'wrist_rotate': [6, 'damaeo'], 'gripper': [7, 'damaeo']}", "right_{'waist': [1, 'damaeo'], 'shoulder': [2, 'damaeo'], 'elbow': [3, 'damaeo'], 'forearm_roll': [4, 'damaeo'], 'wrist_angle': [5, 'damaeo'], 'wrist_rotate': [6, 'damaeo'], 'gripper': [7, 'damaeo']}"]
+["left_{'waist': [1, 'damaeo'], 'shoulder': [2, 'damaeo'], 'elbow': [3, 'damaeo'], 'forearm_roll': [4, 'damaeo'], 'wrist_angle': [5, 'damaeo'], 'wrist_rotate': [6, 'damaeo'], 'gripper': [7, 'damaeo']}", "right_{'waist': [1, 'damaeo'], 'shoulder': [2, 'damaeo'], 'elbow': [3, 'damaeo'], 'forearm_roll': [4, 'damaeo'], 'wrist_angle': [5, 'damaeo'], 'wrist_rotate': [6, 'damaeo'], 'gripper': [7, 'damaeo']}"]
+
+
+
+
+
+#########################################2
+
+Motors: {'waist': [1, 'xm430-w350'], 'shoulder': [2, 'xm430-w350'], 'shoulder_shadow': [3, 'xm430-w350'], 'elbow': [4, 'xm430-w350'], 'elbow_shadow': [5, 'xm430-w350'], 'forearm_roll': [6, 'xm430-w350'], 'wrist_angle': [7, 'xm430-w350'], 'wrist_rotate': [8, 'xl430-w250'], 'gripper': [9, 'xc430-w150']}
+Motor names: ['waist', 'shoulder', 'shoulder_shadow', 'elbow', 'elbow_shadow', 'forearm_roll', 'wrist_angle', 'wrist_rotate', 'gripper']

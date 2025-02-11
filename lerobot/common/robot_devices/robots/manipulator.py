@@ -154,6 +154,7 @@ class ManipulatorRobot:
         self.logs = {}
 
     def get_motor_names(self, arm: dict[str, MotorsBus]) -> list:
+        print([f"{arm}_{motor}" for arm, bus in arm.items() for motor in bus.motors])
         return [f"{arm}_{motor}" for arm, bus in arm.items() for motor in bus.motors]
 
     @property
@@ -227,7 +228,7 @@ class ManipulatorRobot:
             print(f"Connecting {name} leader arm.")
             self.leader_arms[name].connect()
 
-        if self.robot_type in ["koch", "koch_bimanual", "aloha"]:
+        if self.robot_type in ["koch", "koch_bimanual", "aloha", "aloha_ai"]:
             from lerobot.common.robot_devices.motors.dynamixel import TorqueMode
         elif self.robot_type in ["so100", "moss"]:
             from lerobot.common.robot_devices.motors.feetech import TorqueMode
@@ -255,6 +256,7 @@ class ManipulatorRobot:
             self.follower_arms[name].write("Torque_Enable", 1)
 
         if self.config.gripper_open_degree is not None:
+
             if self.robot_type not in ["koch", "koch_bimanual"]:
                 raise NotImplementedError(
                     f"{self.robot_type} does not support position AND current control in the handle, which is require to set the gripper open."
@@ -454,12 +456,12 @@ class ManipulatorRobot:
             # Slower fps expected due to reading from the follower.
             if self.config.max_relative_target is not None:
                 present_pos = self.follower_arms[name].read("Present_Position")
+
                 present_pos = torch.from_numpy(present_pos)
                 goal_pos = ensure_safe_goal_position(goal_pos, present_pos, self.config.max_relative_target)
 
             # Used when record_data=True
             follower_goal_pos[name] = goal_pos
-
             goal_pos = goal_pos.numpy().astype(np.int32)
             self.follower_arms[name].write("Goal_Position", goal_pos)
             self.logs[f"write_follower_{name}_goal_pos_dt_s"] = time.perf_counter() - before_fwrite_t

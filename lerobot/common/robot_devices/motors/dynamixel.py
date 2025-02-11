@@ -723,7 +723,6 @@ class DynamixelMotorsBus:
             values.append(value)
 
         values = np.array(values)
-
         # Convert to signed int to use range [-2048, 2048] for our motor positions.
         if data_name in CONVERT_UINT32_TO_INT32_REQUIRED:
             values = values.astype(np.int32)
@@ -738,7 +737,6 @@ class DynamixelMotorsBus:
         # log the utc time at which the data was received
         ts_utc_name = get_log_name("timestamp_utc", "read", data_name, motor_names)
         self.logs[ts_utc_name] = capture_timestamp_utc()
-
         return values
 
     def write_with_motor_ids(self, motor_models, motor_ids, data_name, values, num_retry=NUM_WRITE_RETRY):
@@ -793,7 +791,7 @@ class DynamixelMotorsBus:
             values = [int(values)] * len(motor_names)
 
         values = np.array(values)
-
+        print(f"Writing {values} to {motor_names} for {data_name}")
         motor_ids = []
         models = []
         for name in motor_names:
