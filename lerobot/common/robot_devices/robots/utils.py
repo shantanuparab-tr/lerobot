@@ -9,6 +9,7 @@ from lerobot.common.robot_devices.robots.configs import (
     RobotConfig,
     So100RobotConfig,
     StretchRobotConfig,
+    AlohaMobileRobotConfig,
 )
 
 
@@ -45,6 +46,8 @@ def make_robot_config(robot_type: str, **kwargs) -> RobotConfig:
         return So100RobotConfig(**kwargs)
     elif robot_type == "stretch":
         return StretchRobotConfig(**kwargs)
+    elif robot_type == "aloha_mobile":
+        return AlohaMobileRobotConfig(**kwargs)
     else:
         raise ValueError(f"Robot type '{robot_type}' is not available.")
 
@@ -54,6 +57,10 @@ def make_robot_from_config(config: RobotConfig):
         from lerobot.common.robot_devices.robots.manipulator import ManipulatorRobot
 
         return ManipulatorRobot(config)
+    elif isinstance(config, AlohaMobileRobotConfig):
+        from lerobot.common.robot_devices.robots.aloha_mobile import AlohaMobileRobot
+
+        return AlohaMobileRobot(config)
     else:
         from lerobot.common.robot_devices.robots.stretch import StretchRobot
 

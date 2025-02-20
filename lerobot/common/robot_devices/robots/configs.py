@@ -91,7 +91,7 @@ class AlohaRobotConfig(ManipulatorRobotConfig):
         default_factory=lambda: {
             "left": DynamixelMotorsBusConfig(
                 # window_x
-                port="/dev/ttyDXL_leader_left",
+                port="/dev/ttyDXL_master_left",
                 motors={
                     # name: (index, model)
                     "waist": [1, "xm430-w350"],
@@ -107,7 +107,7 @@ class AlohaRobotConfig(ManipulatorRobotConfig):
             ),
             "right": DynamixelMotorsBusConfig(
                 # window_x
-                port="/dev/ttyDXL_leader_right",
+                port="/dev/ttyDXL_master_right",
                 motors={
                     # name: (index, model)
                     "waist": [1, "xm430-w350"],
@@ -127,7 +127,7 @@ class AlohaRobotConfig(ManipulatorRobotConfig):
     follower_arms: dict[str, MotorsBusConfig] = field(
         default_factory=lambda: {
             "left": DynamixelMotorsBusConfig(
-                port="/dev/ttyDXL_follower_left",
+                port="/dev/ttyDXL_puppet_left",
                 motors={
                     # name: (index, model)
                     "waist": [1, "xm540-w270"],
@@ -142,7 +142,7 @@ class AlohaRobotConfig(ManipulatorRobotConfig):
                 },
             ),
             "right": DynamixelMotorsBusConfig(
-                port="/dev/ttyDXL_follower_right",
+                port="/dev/ttyDXL_puppet_right",
                 motors={
                     # name: (index, model)
                     "waist": [1, "xm540-w270"],
@@ -165,25 +165,25 @@ class AlohaRobotConfig(ManipulatorRobotConfig):
     cameras: dict[str, CameraConfig] = field(
         default_factory=lambda: {
             "cam_high": IntelRealSenseCameraConfig(
-                serial_number=128422271347,
-                fps=30,
-                width=640,
-                height=480,
-            ),
-            "cam_low": IntelRealSenseCameraConfig(
                 serial_number=130322270656,
                 fps=30,
                 width=640,
                 height=480,
             ),
+            "cam_low": IntelRealSenseCameraConfig(
+                serial_number=130322272542,
+                fps=30,
+                width=640,
+                height=480,
+            ),
             "cam_left_wrist": IntelRealSenseCameraConfig(
-                serial_number=218622272670,
+                serial_number=130322272300,
                 fps=30,
                 width=640,
                 height=480,
             ),
             "cam_right_wrist": IntelRealSenseCameraConfig(
-                serial_number=130322272300,
+                serial_number=218622272670,
                 fps=30,
                 width=640,
                 height=480,
@@ -514,3 +514,15 @@ class StretchRobotConfig(RobotConfig):
     )
 
     mock: bool = False
+
+
+
+
+@RobotConfig.register_subclass("aloha_mobile")
+@dataclass
+class AlohaMobileRobotConfig(RobotConfig):
+    
+    max_relative_target: int | None = None
+    cameras = {}
+    mock: bool = False
+
