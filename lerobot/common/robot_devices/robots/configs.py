@@ -11,9 +11,9 @@ from lerobot.common.robot_devices.cameras.configs import (
 )
 from lerobot.common.robot_devices.motors.configs import (
     DynamixelMotorsBusConfig,
-    TrossenArmDriverConfig,
     FeetechMotorsBusConfig,
     MotorsBusConfig,
+    TrossenArmDriverConfig,
 )
 
 
@@ -166,25 +166,25 @@ class AlohaRobotConfig(ManipulatorRobotConfig):
     cameras: dict[str, CameraConfig] = field(
         default_factory=lambda: {
             "cam_high": IntelRealSenseCameraConfig(
-                serial_number=130322270656,
+                serial_number=128422271347,
                 fps=30,
                 width=640,
                 height=480,
             ),
             "cam_low": IntelRealSenseCameraConfig(
-                serial_number=218622272670,
+                serial_number=130322270656,
                 fps=30,
                 width=640,
                 height=480,
             ),
             "cam_left_wrist": IntelRealSenseCameraConfig(
-                serial_number=130322272300,
+                serial_number=218622272670,
                 fps=30,
                 width=640,
                 height=480,
             ),
             "cam_right_wrist": IntelRealSenseCameraConfig(
-                serial_number=130322272542,
+                serial_number=130322272300,
                 fps=30,
                 width=640,
                 height=480,
@@ -518,9 +518,9 @@ class StretchRobotConfig(RobotConfig):
 
 
 
-@RobotConfig.register_subclass("aloha_ai")
+@RobotConfig.register_subclass("trossen_ai_bimanual")
 @dataclass
-class AlohaAIRobotConfig(ManipulatorRobotConfig):
+class TrossenAIBimanualRobotConfig(ManipulatorRobotConfig):
     # Specific to Aloha, LeRobot comes with default calibration files. Assuming the motors have been
     # properly assembled, no manual calibration step is expected. If you need to run manual calibration,
     # simply update this path to ".cache/calibration/aloha"
@@ -541,13 +541,13 @@ class AlohaAIRobotConfig(ManipulatorRobotConfig):
     leader_arms: dict[str, MotorsBusConfig] = field(
         default_factory=lambda: {
             "left": TrossenArmDriverConfig(
-                # window_x
-                ip="192.168.1.2",
+                # wxai
+                ip="192.168.1.3",
                 model="V0_LEADER",
             ),
             "right": TrossenArmDriverConfig(
-                # window_x
-                ip="192.168.1.4",
+                # wxai
+                ip="192.168.1.2",
                 model="V0_LEADER",
             ),
         }
@@ -556,11 +556,11 @@ class AlohaAIRobotConfig(ManipulatorRobotConfig):
     follower_arms: dict[str, MotorsBusConfig] = field(
         default_factory=lambda: {
             "left": TrossenArmDriverConfig(
-                ip="192.168.1.3",
+                ip="192.168.1.5",
                 model="V0_FOLLOWER",
             ),
             "right": TrossenArmDriverConfig(
-                ip="192.168.1.5",
+                ip="192.168.1.4",
                 model = "V0_FOLLOWER",
             ),
         }
@@ -593,3 +593,4 @@ class AlohaAIRobotConfig(ManipulatorRobotConfig):
     )
 
     mock: bool = False
+

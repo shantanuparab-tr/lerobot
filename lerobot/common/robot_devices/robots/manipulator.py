@@ -154,7 +154,6 @@ class ManipulatorRobot:
         self.logs = {}
 
     def get_motor_names(self, arm: dict[str, MotorsBus]) -> list:
-        print([f"{arm}_{motor}" for arm, bus in arm.items() for motor in bus.motors])
         return [f"{arm}_{motor}" for arm, bus in arm.items() for motor in bus.motors]
 
     @property
@@ -265,7 +264,6 @@ class ManipulatorRobot:
             self.follower_arms[name].write("Torque_Enable", 1)
 
         if self.config.gripper_open_degree is not None:
-
             if self.robot_type not in ["koch", "koch_bimanual"]:
                 raise NotImplementedError(
                     f"{self.robot_type} does not support position AND current control in the handle, which is require to set the gripper open."
@@ -475,7 +473,6 @@ class ManipulatorRobot:
             self.follower_arms[name].write("Goal_Position", goal_pos)
             self.logs[f"write_follower_{name}_goal_pos_dt_s"] = time.perf_counter() - before_fwrite_t
 
-        
         # Early exit when recording data is not requested
         if not record_data:
             return
