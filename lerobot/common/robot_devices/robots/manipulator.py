@@ -209,6 +209,15 @@ class ManipulatorRobot:
             available_arms.append(arm_id)
         return available_arms
 
+    def teleop_safety_stop(self):
+        if self.robot_type in ["aloha_ai"]:
+            for arms in self.follower_arms:
+                self.follower_arms[arms].write("Reset", 1)
+                self.follower_arms[arms].write("Torque_Enable", 1)
+            for arms in self.leader_arms:
+                self.leader_arms[arms].write("Reset", 1)
+                self.leader_arms[arms].write("Torque_Enable", 0)
+
     def connect(self):
         if self.is_connected:
             raise RobotDeviceAlreadyConnectedError(

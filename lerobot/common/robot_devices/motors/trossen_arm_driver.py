@@ -1,12 +1,11 @@
 
 import time
 import traceback
-import trossen_arm_driver as trossen
+import trossen_arm as trossen
 import numpy as np
 
 from lerobot.common.robot_devices.utils import RobotDeviceAlreadyConnectedError, RobotDeviceNotConnectedError
 from lerobot.common.robot_devices.motors.configs import TrossenArmDriverConfig
-import scipy.interpolate
 
 import threading
 
@@ -75,10 +74,9 @@ class TrossenArmDriver:
         self.group_readers = {}
         self.group_writers = {}
         self.logs = {}
-
-        self.dt= 1e-3
-        self.home_pose = np.array([0, np.pi/12, np.pi/12, 0, 0, 0, 0])
-        self.sleep_pose = np.array([0, 0, 0, 0, 0, 0, 0])
+        self.fps = 30
+        self.home_pose = [0, np.pi/12, np.pi/12, 0, 0, 0, 0]
+        self.sleep_pose = [0, 0, 0, 0, 0, 0, 0]
 
         self.motors={
                     # name: (index, model)
@@ -90,18 +88,9 @@ class TrossenArmDriver:
                     "wrist_rotate": [6, "damaeo"],
                     "gripper": [7, "damaeo"],
                 }
-        
-        self.target_positions = None
-        self.current_positions = None
-        self.running = True  # Control flag for background thread
-        self.write_freq = 30  # Hz (Leader update frequency)
-        self.driver_freq = 150  # Hz (Follower update frequency)
-        self.interp_buffer = None  # Interpolated trajectory buffer
-        self.lock = threading.Lock()  # Thread safety lock
 
-        # Start the background update thread
-        self.update_thread = threading.Thread(target=self._run_follower_motion, daemon=True)
-        self.update_thread.start()
+        self.prev_write_time = 0
+        self.current_write_time = None
 
     def connect(self):
         print(f"Connecting to {self.model} arm at {self.ip}...")
@@ -133,8 +122,9 @@ class TrossenArmDriver:
             )
             raise
 
-        # Move the arms to the home pose
-        self.driver.move_arm_to(2.0, self.home_pose[:6])
+        # # Move the arms to the home pose
+        self.driver.set_all_modes(trossen.Mode.position)
+        self.driver.set_all_positions(self.home_pose, 2.0, True)
 
         # Allow to read and write
         self.is_connected = True
@@ -146,7 +136,7 @@ class TrossenArmDriver:
         except KeyError:
             raise ValueError(f"Unsupported model: {self.model}")
         try:
-            self.driver.configure(model_name, model_end_effector, self.ip, False)
+            self.driver.configure(model_name, model_end_effector, self.ip, True)
         except Exception:
             traceback.print_exc()
             print(
@@ -185,73 +175,6 @@ class TrossenArmDriver:
         pass
 
 
-    def _interpolate_positions(self, new_target):
-        """Interpolates between previous and new target positions smoothly."""
-        # if not self.driver.receive_robot_output():
-        #     print("Failed to receive the states!")
-
-        self.current_positions = np.array(self.driver.get_positions())
-
-        t = np.linspace(0, 1, int(self.driver_freq / self.write_freq))  # Time steps
-        interpolator = scipy.interpolate.interp1d([0, 1], np.vstack([self.current_positions, new_target]), axis=0, kind='linear')
-        return interpolator(t)
-
-    def _run_follower_motion(self):
-        """Continuously writes smoothed positions at 150Hz."""
-        while self.running:
-            if self.interp_buffer is not None:
-                for pos in self.interp_buffer:
-                    with self.lock:
-                        self.driver.set_positions(pos)
-                        if not self.driver.receive_robot_output():
-                            print("Failed to receive the states!")
-                        self.current_positions = self.driver.get_positions()
-
-                    time.sleep(1 / self.driver_freq)  # Maintain 150Hz write rate
-
-    
-    def stop(self):
-        """Stops the motion thread."""
-        self.running = False
-        self.update_thread.join()
-
-    def radians_to_discrete(self,radians, resolution=4096):
-        """
-        Convert radians to discrete integer values with a given resolution.
-        Args:
-            radians (float or np.ndarray): Input radians in the range [-π, π].
-            resolution (int): Number of discrete steps (default: 4096).
-        Returns:
-            np.ndarray: Discrete integer values representing the radians.
-        """
-        radians = np.array(radians, dtype=np.float32)
-        # Ensure radians are in the range [-π, π]
-        if np.any((radians[:6] < -np.pi) | (radians[:6] > np.pi)):
-            raise ValueError("Radians must be in the range [-π, π].")
-
-        # Map radians to discrete integer values
-        discrete_values = ((radians + np.pi) / (2 * np.pi) * (resolution - 1)).round()
-        # Convert radians to degrees
-        # discrete_values = np.degrees(radians)
-
-        return discrete_values
-
-    def discrete_to_radians(self, discrete_values, resolution=4096):
-        """
-        Convert discrete integer values back to radians with a given resolution.
-        Args:
-            discrete_values (np.ndarray): Discrete integer values.
-            resolution (int): Number of discrete steps (default: 4096).
-        Returns:
-            np.ndarray: Restored radians values.
-        """
-        # Map discrete values back to radians
-        radians = (discrete_values / (resolution - 1) * (2 * np.pi)) - np.pi
-        # Convert degrees to radians
-        # radians = discrete_values * 3.14159 / 180
-        # radians = [round(r, 4) for r in radians]
-        return radians
-
 
     def read(self, data_name, motor_names: str | list[str] | None = None):
         if not self.is_connected:
@@ -263,17 +186,14 @@ class TrossenArmDriver:
 
         # Read the present position of the motors
         if data_name == "Present_Position":
-
-            self.driver.request_robot_output()
             # Get the positions of the motors
             values = self.driver.get_positions()
             # print("=================================================================================================")
-            # print(f"Leader Values {[f'{value:.4f}' for value in values]}")
-            values = self.radians_to_discrete(values)
+            # print(f"Raw Leader Values (Radians): {['{:.7f}'.format(v) for v in values]}")
+            values[:-1] = np.degrees(values[:-1])  # Convert all joints except gripper
+            values[-1] = values[-1] * 10000  # Convert gripper meters to millimeters (0-45)
+            # print(f"Converted Leader Values (Degrees for joints, mm for gripper): {values}")
 
-            # Receive the updated states
-            if not self.driver.receive_robot_output():
-                print("Failed to receive the states!")
         else:
             values = None
             print(f"Data name: {data_name} is not supported for reading.")
@@ -285,6 +205,20 @@ class TrossenArmDriver:
         values = np.array(values, dtype=np.float32)
         return values
 
+    def compute_time_to_move(self, goal_values: np.ndarray):
+        # Compute the time to move based on the distance between the start and goal values
+        # and the maximum speed of the motors
+        PITCH_CIRCLE_RADIUS = 0.00875 # meters
+        VEL_LIMITS = [3.375, 3.375, 3.375, 7.0, 7.0, 7.0, 12.5 * PITCH_CIRCLE_RADIUS]
+        current_pose = self.driver.get_positions()
+        displacement = abs(goal_values - current_pose)
+        time_to_move_all_joints = 3*displacement / VEL_LIMITS
+        time_to_move = max(time_to_move_all_joints)
+        joints = ['joint_1', 'joint_2', 'joint_3', 'joint_4', 'joint_5', 'joint_6', 'gripper']
+        print(f"Joint: {joints[np.argmax(displacement)]} is moving the most {max(displacement)} needs the most time {time_to_move}.")
+        time_to_move = max(time_to_move, 3/self.fps)
+        print(f"Time to Move: {time_to_move} comapared to {3/self.fps}")
+        return time_to_move
 
     def write(self, data_name, values: int | float | np.ndarray, motor_names: str | list[str] | None = None):
         if not self.is_connected:
@@ -296,38 +230,27 @@ class TrossenArmDriver:
 
         # Write the goal position of the motors
         if data_name == "Goal_Position":
-
-            # Convert int32 to float and scale it down
-            values = self.discrete_to_radians(values)
-
-            # print(f"Follower Write {[f'{value:.4f}' for value in values]}")
-            # print("=================================================================================================")
-
-            # Set the positions of the motors
-            self.driver.set_positions(values)
-            # with self.lock:
-            #     self.interp_buffer = self._interpolate_positions(values)  # Generate smooth steps
-            # Receive the updated states
-            if not self.driver.receive_robot_output():
-                print("Failed to receive the states!")
+            # print(f"Received Goal Values (Degrees for joints, mm for gripper): {values}")
+            values = np.array(values, dtype=np.float32)
+            # Convert back to radians for joints
+            values[:-1] = np.radians(values[:-1])  # Convert all joints except gripper
+            values[-1] = values[-1] / 10000  # Convert gripper mm back to meters (0-0.045)
+            self.driver.set_all_positions(values.tolist(), self.compute_time_to_move(values), False)
+            self.prev_write_time = self.current_write_time
 
         # Enable or disable the torque of the motors
         elif data_name == "Torque_Enable":
             # Set the arms to POSITION mode
             if values == 1:
-                modes = self.driver.get_modes()
-                if modes != [trossen.Mode.position] * 7:
-                    self.driver.set_mode(trossen.Mode.position)
-                else:
-                    print("Mode is already set to POSITION")
-            # Set the arms to GRAVITY_COMPENSATION mode
+                self.driver.set_all_modes(trossen.Mode.position)
             else:
-                modes = self.driver.get_modes()
-                if modes!= [trossen.Mode.torque] * 7:
-                    self.driver.set_mode(trossen.Mode.torque)
-                    self.driver.set_torques([0, 0, 0, 0, 0, 0, 0])
-                else:
-                    print("Mode is already set to GRAVITY_COMPENSATION")
+                self.driver.set_all_modes(trossen.Mode.effort)
+                self.driver.set_all_efforts([0.0] * 7, 0.0, True)
+        elif data_name == "Reset":
+            print("Resetting the motors...")
+            self.driver.set_all_modes(trossen.Mode.position)
+            print("Position Mode: ", self.driver.get_modes())
+            self.driver.set_all_positions(self.home_pose, 2.0, True)
         else:
             print(f"Data name: {data_name} value: {values} is not supported for writing.")
 
@@ -339,22 +262,11 @@ class TrossenArmDriver:
                 f"Trossen Arm Driver ({self.port}) is not connected. Try running `motors_bus.connect()` first."
             )
         print("Moving the motors to their sleep position...")
-        modes = self.driver.get_modes()
-        if modes!= [trossen.Mode.torque] * 7:
-            self.driver.set_mode(trossen.Mode.torque)
-            self.driver.set_torques([0, 0, 0, 0, 0, 0, 0])
-        time.sleep(1)
-        print("Modes are set to", self.driver.get_modes())
-        self.driver.move_arm_to(2.0, self.sleep_pose[:6])
-
-        print("Setting the motors to idle mode...")
-
-        self.driver.set_mode(trossen.Mode.idle)
-
-        print("Cleaning up the drivers...")
-        self.driver.cleanup()
-
-
+        self.driver.set_all_modes(trossen.Mode.position)
+        print("Home Pose: ", self.home_pose)
+        self.driver.set_all_positions(self.home_pose, 2.0, True)
+        print("Sleep Pose: ", self.sleep_pose)
+        self.driver.set_all_positions(self.sleep_pose, 2.0, True)
 
         self.is_connected = False
 
