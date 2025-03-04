@@ -791,7 +791,7 @@ class DynamixelMotorsBus:
             values = [int(values)] * len(motor_names)
 
         values = np.array(values)
-        print(f"Writing {values} to {motor_names} for {data_name}")
+        # print(f"Writing {values} to {motor_names} for {data_name}")
         motor_ids = []
         models = []
         for name in motor_names:

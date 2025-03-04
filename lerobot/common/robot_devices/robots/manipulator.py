@@ -475,6 +475,7 @@ class ManipulatorRobot:
             self.follower_arms[name].write("Goal_Position", goal_pos)
             self.logs[f"write_follower_{name}_goal_pos_dt_s"] = time.perf_counter() - before_fwrite_t
 
+        
         # Early exit when recording data is not requested
         if not record_data:
             return
