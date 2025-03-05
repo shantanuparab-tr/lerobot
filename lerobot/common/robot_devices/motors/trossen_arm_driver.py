@@ -244,8 +244,8 @@ class TrossenArmDriver:
             if values == 1:
                 self.driver.set_all_modes(trossen.Mode.position)
             else:
-                self.driver.set_all_modes(trossen.Mode.effort)
-                self.driver.set_all_efforts([0.0] * 7, 0.0, True)
+                self.driver.set_all_modes(trossen.Mode.external_effort)
+                self.driver.set_all_external_efforts([0.0] * 7, 0.0, True)
         elif data_name == "Reset":
             print("Resetting the motors...")
             self.driver.set_all_modes(trossen.Mode.position)
