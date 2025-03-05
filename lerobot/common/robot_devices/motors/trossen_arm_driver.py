@@ -80,13 +80,13 @@ class TrossenArmDriver:
 
         self.motors={
                     # name: (index, model)
-                    "waist": [1, "damaeo"],
-                    "shoulder": [2, "damaeo"],
-                    "elbow": [3, "damaeo"],
-                    "forearm_roll": [4, "damaeo"],
-                    "wrist_angle": [5, "damaeo"],
-                    "wrist_rotate": [6, "damaeo"],
-                    "gripper": [7, "damaeo"],
+                    "joint_0": [1, "damaeo_4340"],
+                    "joint_1": [2, "damaeo_4340"],
+                    "joint_2": [3, "damaeo_4340"],
+                    "joint_3": [4, "damaeo_4310"],
+                    "joint_4": [5, "damaeo_4310"],
+                    "joint_5": [6, "damaeo_4310"],
+                    "joint_6": [7, "damaeo_4310"],
                 }
 
         self.prev_write_time = 0
@@ -96,7 +96,7 @@ class TrossenArmDriver:
         print(f"Connecting to {self.model} arm at {self.ip}...")
         if self.is_connected:
             raise RobotDeviceAlreadyConnectedError(
-            f"TrossenArmDriver({self.ip}) is already connected. Do not call `motors_bus.connect()` twice."
+                f"TrossenArmDriver({self.ip}) is already connected. Do not call `motors_bus.connect()` twice."
             )
 
         print("Initializing the drivers...")
@@ -118,7 +118,7 @@ class TrossenArmDriver:
         except Exception:
             traceback.print_exc()
             print(
-            f"Failed to configure the driver for the {self.model} arm at {self.ip}."
+                f"Failed to configure the driver for the {self.model} arm at {self.ip}."
             )
             raise
 
@@ -140,7 +140,7 @@ class TrossenArmDriver:
         except Exception:
             traceback.print_exc()
             print(
-            f"Failed to configure the driver for the {self.model} arm at {self.ip}."
+                f"Failed to configure the driver for the {self.model} arm at {self.ip}."
             )
             raise
 
@@ -188,12 +188,8 @@ class TrossenArmDriver:
         if data_name == "Present_Position":
             # Get the positions of the motors
             values = self.driver.get_positions()
-            # print("=================================================================================================")
-            # print(f"Raw Leader Values (Radians): {['{:.7f}'.format(v) for v in values]}")
             values[:-1] = np.degrees(values[:-1])  # Convert all joints except gripper
             values[-1] = values[-1] * 10000  # Convert gripper meters to millimeters (0-45)
-            # print(f"Converted Leader Values (Degrees for joints, mm for gripper): {values}")
-
         else:
             values = None
             print(f"Data name: {data_name} is not supported for reading.")
@@ -214,10 +210,7 @@ class TrossenArmDriver:
         displacement = abs(goal_values - current_pose)
         time_to_move_all_joints = 3*displacement / VEL_LIMITS
         time_to_move = max(time_to_move_all_joints)
-        joints = ['joint_1', 'joint_2', 'joint_3', 'joint_4', 'joint_5', 'joint_6', 'gripper']
-        print(f"Joint: {joints[np.argmax(displacement)]} is moving the most {max(displacement)} needs the most time {time_to_move}.")
         time_to_move = max(time_to_move, 3/self.fps)
-        print(f"Time to Move: {time_to_move} comapared to {3/self.fps}")
         return time_to_move
 
     def write(self, data_name, values: int | float | np.ndarray, motor_names: str | list[str] | None = None):
@@ -230,7 +223,6 @@ class TrossenArmDriver:
 
         # Write the goal position of the motors
         if data_name == "Goal_Position":
-            # print(f"Received Goal Values (Degrees for joints, mm for gripper): {values}")
             values = np.array(values, dtype=np.float32)
             # Convert back to radians for joints
             values[:-1] = np.radians(values[:-1])  # Convert all joints except gripper
@@ -247,9 +239,7 @@ class TrossenArmDriver:
                 self.driver.set_all_modes(trossen.Mode.external_effort)
                 self.driver.set_all_external_efforts([0.0] * 7, 0.0, True)
         elif data_name == "Reset":
-            print("Resetting the motors...")
             self.driver.set_all_modes(trossen.Mode.position)
-            print("Position Mode: ", self.driver.get_modes())
             self.driver.set_all_positions(self.home_pose, 2.0, True)
         else:
             print(f"Data name: {data_name} value: {values} is not supported for writing.")
@@ -261,11 +251,8 @@ class TrossenArmDriver:
             raise RobotDeviceNotConnectedError(
                 f"Trossen Arm Driver ({self.port}) is not connected. Try running `motors_bus.connect()` first."
             )
-        print("Moving the motors to their sleep position...")
         self.driver.set_all_modes(trossen.Mode.position)
-        print("Home Pose: ", self.home_pose)
         self.driver.set_all_positions(self.home_pose, 2.0, True)
-        print("Sleep Pose: ", self.sleep_pose)
         self.driver.set_all_positions(self.sleep_pose, 2.0, True)
 
         self.is_connected = False
