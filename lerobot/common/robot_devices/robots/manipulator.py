@@ -146,7 +146,8 @@ class ManipulatorRobot:
     ):
         self.config = config
         self.robot_type = self.config.type
-        self.calibration_dir = Path(self.config.calibration_dir)
+        if not self.robot_type =="trossen_ai_bimanual":
+            self.calibration_dir = Path(self.config.calibration_dir)
         self.leader_arms = make_motors_buses_from_configs(self.config.leader_arms)
         self.follower_arms = make_motors_buses_from_configs(self.config.follower_arms)
         self.cameras = make_cameras_from_configs(self.config.cameras)
@@ -248,7 +249,9 @@ class ManipulatorRobot:
         for name in self.leader_arms:
             self.leader_arms[name].write("Torque_Enable", TorqueMode.DISABLED.value)
 
-        self.activate_calibration()
+        if not self.robot_type == "trossen_ai_bimanual":
+            print("Checking if calibration is needed.")
+            self.activate_calibration()
 
         # Set robot preset (e.g. torque in leader gripper for Koch v1.1)
         if self.robot_type in ["koch", "koch_bimanual"]:
