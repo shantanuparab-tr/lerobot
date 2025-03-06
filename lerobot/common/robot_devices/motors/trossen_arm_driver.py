@@ -6,7 +6,8 @@ import numpy as np
 from lerobot.common.robot_devices.utils import RobotDeviceAlreadyConnectedError, RobotDeviceNotConnectedError
 from lerobot.common.robot_devices.motors.configs import TrossenArmDriverConfig
 
-import threading
+PITCH_CIRCLE_RADIUS = 0.00875 # meters
+VEL_LIMITS = [3.375, 3.375, 3.375, 7.0, 7.0, 7.0, 12.5 * PITCH_CIRCLE_RADIUS]
 
 TROSSEN_ARM_MODELS = {
     "V0_LEADER": [trossen.Model.wxai_v0, trossen.StandardEndEffector.wxai_v0_leader],
@@ -16,7 +17,7 @@ TROSSEN_ARM_MODELS = {
 class TrossenArmDriver:
     """
         The `TrossenArmDriver` class provides an interface for controlling 
-        Trossen Robotics' robotic arms. It leverages the trossen_arm_driver_py for communication with arms.
+        Trossen Robotics' robotic arms. It leverages the trossen_arm for communication with arms.
 
         This class allows for configuration, torque management, and motion control of robotic arms. It includes features for handling connection states, moving the 
         arm to specified poses, and logging timestamps for debugging and performance analysis.
@@ -25,7 +26,6 @@ class TrossenArmDriver:
         - **Multi-motor Control:** Supports multiple motors connected to a bus.
         - **Mode Switching:** Enables switching between position and gravity 
         compensation modes.
-        - **Motion Interpolation:** Implements smooth motion using `PchipInterpolator` for trajectory generation.
         - **Home and Sleep Pose Management:** Automatically transitions the arm to home and sleep poses for safe operation.
         - **Error Handling:** Raises specific exceptions for connection and operational errors.
         - **Logging:** Captures timestamps for operations to aid in debugging.
@@ -33,17 +33,17 @@ class TrossenArmDriver:
         ### Example Usage:
         ```python
         motors = {
-            "waist": (1, "dameo"),
-            "shoulder": (2, "dameo"),y
-            "elbow": (4, "dameo"),
-            "forearm_roll": (6, "dameo"),
-            "wrist_angle": (7, "dameo"),
-            "wrist_rotate": (8, "dameo"),
-            "gripper": (9, "dameo"),
+            "joint_0": (1, "4340"),
+            "joint_1": (2, "4340"),
+            "joint_2": (4, "4340"),
+            "joint_3": (6, "4310"),
+            "joint_4": (7, "4310"),
+            "joint_5": (8, "4310"),
+            "joint_6": (9, "4310"),
         }
         arm_driver = TrossenArmDriver(
             motors=motors,
-            ip="192.168.0.10",
+            ip="192.168.1.2",
             model="V0_LEADER",
         )
         arm_driver.connect()
@@ -51,8 +51,9 @@ class TrossenArmDriver:
         # Read motor positions
         positions = arm_driver.read("Present_Position")
 
-        # Move to a new position
-        arm_driver.write("Goal_Position", positions + 30)
+        # Move to a new position (Home Pose)
+        # Last joint is the gripper, which is in range [0, 450]
+        arm_driver.write("Goal_Position", [0, 15, 15, 0, 0, 0, 200])
 
         # Disconnect when done
         arm_driver.disconnect()
@@ -95,6 +96,9 @@ class TrossenArmDriver:
         # We scale the time to move based on the distance between the start and goal values and the maximum speed of the motors.
         # The below factor is used to scale the time to move.
         self.TIME_SCALING_FACTOR = 3.0
+
+        # Minimum time to move for the arm (This is a tuning parameter)
+        self.MIN_TIME_TO_MOVE = 3.0 / self.fps
 
     def connect(self):
         print(f"Connecting to {self.model} arm at {self.ip}...")
@@ -191,7 +195,7 @@ class TrossenArmDriver:
             # Get the positions of the motors
             values = self.driver.get_positions()
             values[:-1] = np.degrees(values[:-1])  # Convert all joints except gripper
-            values[-1] = values[-1] * 10000  # Convert gripper meters to millimeters (0-45)
+            values[-1] = values[-1] * 10000  # Convert gripper to range (0-450)
         else:
             values = None
             print(f"Data name: {data_name} is not supported for reading.")
@@ -206,13 +210,11 @@ class TrossenArmDriver:
     def compute_time_to_move(self, goal_values: np.ndarray):
         # Compute the time to move based on the distance between the start and goal values
         # and the maximum speed of the motors
-        PITCH_CIRCLE_RADIUS = 0.00875 # meters
-        VEL_LIMITS = [3.375, 3.375, 3.375, 7.0, 7.0, 7.0, 12.5 * PITCH_CIRCLE_RADIUS]
         current_pose = self.driver.get_positions()
         displacement = abs(goal_values - current_pose)
         time_to_move_all_joints = self.TIME_SCALING_FACTOR*displacement / VEL_LIMITS
         time_to_move = max(time_to_move_all_joints)
-        time_to_move = max(time_to_move, 3/self.fps)
+        time_to_move = max(time_to_move, self.MIN_TIME_TO_MOVE)
         return time_to_move
 
     def write(self, data_name, values: int | float | np.ndarray, motor_names: str | list[str] | None = None):
@@ -228,7 +230,7 @@ class TrossenArmDriver:
             values = np.array(values, dtype=np.float32)
             # Convert back to radians for joints
             values[:-1] = np.radians(values[:-1])  # Convert all joints except gripper
-            values[-1] = values[-1] / 10000  # Convert gripper mm back to meters (0-0.045)
+            values[-1] = values[-1] / 10000  # Convert gripper back to range (0-0.045)
             self.driver.set_all_positions(values.tolist(), self.compute_time_to_move(values), False)
             self.prev_write_time = self.current_write_time
 

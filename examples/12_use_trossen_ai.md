@@ -176,7 +176,7 @@ python lerobot/scripts/train.py \
   --dataset.repo_id=${HF_USER}/trossen_ai_bimanual_test \
   --policy.type=act \
   --output_dir=outputs/train/act_trossen_ai_bimanual_test \
-  --job_name=act_aloha_test \
+  --job_name=act_trossen_ai_bimanual_test \
   --device=cuda \
   --wandb.enable=true
 ```

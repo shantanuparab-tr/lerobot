@@ -526,7 +526,7 @@ class TrossenAIBimanualRobotConfig(ManipulatorRobotConfig):
     # `max_relative_target` limits the magnitude of the relative positional target vector for safety purposes.
     # Set this to a positive scalar to have the same value for all motors, or a list that is the same length as
     # the number of motors in your follower arms.
-    # For Aloha, for every goal position request, motor rotations are capped at 5 degrees by default.
+    # For Trossen AI Arms, for every goal position request, motor rotations are capped at 5 degrees by default.
     # When you feel more confident with teleoperation or running the policy, you can extend
     # this safety limit and even removing it by setting it to `null`.
     # Also, everything is expected to work safely out-of-the-box, but we highly advise to
