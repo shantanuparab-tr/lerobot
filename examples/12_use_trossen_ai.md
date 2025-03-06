@@ -1,4 +1,4 @@
-This tutorial explains how to use [Aloha and Aloha 2 stationary](https://www.trossenrobotics.com/aloha-stationary) with LeRobot.
+This tutorial explains how to use [Trossen AI Stationary](https://www.trossenrobotics.com/aloha-stationary) with LeRobot.
 
 ## Setup
 
@@ -27,15 +27,17 @@ conda create -y -n lerobot python=3.10 && conda activate lerobot
 
 4. Clone LeRobot:
 ```bash
-git clone https://github.com/huggingface/lerobot.git ~/lerobot
+git clone https://github.com/Interbotix/lerobot.git ~/lerobot
 ```
 
-5. Install LeRobot with dependencies for the Aloha motors (dynamixel) and cameras (intelrealsense):
+5. Install LeRobot with dependencies for the Trossen AI arms (trossen-arm) and cameras (intelrealsense):
+
 ```bash
 cd ~/lerobot && pip install -e ".[trossen_ai]"
 ```
 
 For Linux only (not Mac), install extra dependencies for recording datasets:
+
 ```bash
 conda install -y -c conda-forge ffmpeg
 pip uninstall -y opencv-python
@@ -217,4 +219,3 @@ As you can see, it's almost the same command as previously used to record your t
 
 Follow this [previous tutorial](https://github.com/huggingface/lerobot/blob/main/examples/7_get_started_with_real_robot.md#4-train-a-policy-on-your-data) for a more in-depth explaination.
 
-If you have any question or need help, please reach out on Discord in the channel `#aloha-arm`.

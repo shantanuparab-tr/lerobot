@@ -521,11 +521,7 @@ class StretchRobotConfig(RobotConfig):
 @RobotConfig.register_subclass("trossen_ai_bimanual")
 @dataclass
 class TrossenAIBimanualRobotConfig(ManipulatorRobotConfig):
-    # Specific to Aloha, LeRobot comes with default calibration files. Assuming the motors have been
-    # properly assembled, no manual calibration step is expected. If you need to run manual calibration,
-    # simply update this path to ".cache/calibration/aloha"
-    calibration_dir: str = ".cache/calibration/aloha_default"
-
+    
     # /!\ FOR SAFETY, READ THIS /!\
     # `max_relative_target` limits the magnitude of the relative positional target vector for safety purposes.
     # Set this to a positive scalar to have the same value for all motors, or a list that is the same length as
@@ -541,12 +537,12 @@ class TrossenAIBimanualRobotConfig(ManipulatorRobotConfig):
     leader_arms: dict[str, MotorsBusConfig] = field(
         default_factory=lambda: {
             "left": TrossenArmDriverConfig(
-                # window_x
+                # wxai
                 ip="192.168.1.3",
                 model="V0_LEADER",
             ),
             "right": TrossenArmDriverConfig(
-                # window_x
+                # wxai
                 ip="192.168.1.2",
                 model="V0_LEADER",
             ),

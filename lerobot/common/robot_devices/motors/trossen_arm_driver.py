@@ -1,4 +1,3 @@
-
 import time
 import traceback
 import trossen_arm as trossen
@@ -80,17 +79,22 @@ class TrossenArmDriver:
 
         self.motors={
                     # name: (index, model)
-                    "joint_0": [1, "damaeo_4340"],
-                    "joint_1": [2, "damaeo_4340"],
-                    "joint_2": [3, "damaeo_4340"],
-                    "joint_3": [4, "damaeo_4310"],
-                    "joint_4": [5, "damaeo_4310"],
-                    "joint_5": [6, "damaeo_4310"],
-                    "joint_6": [7, "damaeo_4310"],
+                    "joint_0": [1, "4340"],
+                    "joint_1": [2, "4340"],
+                    "joint_2": [3, "4340"],
+                    "joint_3": [4, "4310"],
+                    "joint_4": [5, "4310"],
+                    "joint_5": [6, "4310"],
+                    "joint_6": [7, "4310"],
                 }
 
         self.prev_write_time = 0
         self.current_write_time = None
+        
+        # To prevent DiscontinuityError due to large jumps in position in short time.
+        # We scale the time to move based on the distance between the start and goal values and the maximum speed of the motors.
+        # The below factor is used to scale the time to move.
+        self.TIME_SCALING_FACTOR = 3.0
 
     def connect(self):
         print(f"Connecting to {self.model} arm at {self.ip}...")
@@ -122,7 +126,7 @@ class TrossenArmDriver:
             )
             raise
 
-        # # Move the arms to the home pose
+        # Move the arms to the home pose
         self.driver.set_all_modes(trossen.Mode.position)
         self.driver.set_all_positions(self.home_pose, 2.0, True)
 
@@ -174,8 +178,6 @@ class TrossenArmDriver:
     def revert_calibration(self, values: np.ndarray | list, motor_names: list[str] | None):
         pass
 
-
-
     def read(self, data_name, motor_names: str | list[str] | None = None):
         if not self.is_connected:
             raise RobotDeviceNotConnectedError(
@@ -208,7 +210,7 @@ class TrossenArmDriver:
         VEL_LIMITS = [3.375, 3.375, 3.375, 7.0, 7.0, 7.0, 12.5 * PITCH_CIRCLE_RADIUS]
         current_pose = self.driver.get_positions()
         displacement = abs(goal_values - current_pose)
-        time_to_move_all_joints = 3*displacement / VEL_LIMITS
+        time_to_move_all_joints = self.TIME_SCALING_FACTOR*displacement / VEL_LIMITS
         time_to_move = max(time_to_move_all_joints)
         time_to_move = max(time_to_move, 3/self.fps)
         return time_to_move
@@ -216,7 +218,7 @@ class TrossenArmDriver:
     def write(self, data_name, values: int | float | np.ndarray, motor_names: str | list[str] | None = None):
         if not self.is_connected:
             raise RobotDeviceNotConnectedError(
-                f"DynamixelMotorsBus({self.port}) is not connected. You need to run `motors_bus.connect()`."
+                f"TrossenAIArm({self.port}) is not connected. You need to run `motors_bus.connect()`."
             )
 
         start_time = time.perf_counter()
